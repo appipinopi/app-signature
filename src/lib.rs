@@ -8,6 +8,17 @@ pub use live::LiveSignature;
 pub const WEB_SCRIPT: &str = include_str!("../web/app-signature.js");
 pub const WEB_STYLE: &str = include_str!("../web/app-signature.css");
 pub const CREATOR_JSON: &str = include_str!("../creator.json");
+pub const GALLERY_HTML: &str = include_str!("../web/gallery.html");
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct App {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub url: String,
+    pub icon: String,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -16,6 +27,8 @@ pub struct Creator {
     pub url: String,
     #[serde(default, rename = "worksUrl", skip_serializing_if = "Option::is_none")]
     pub works_url: Option<String>,
+    #[serde(default)]
+    pub apps: Vec<App>,
 }
 fn default_creator() -> Creator {
     serde_json::from_str(CREATOR_JSON).expect("built-in creator manifest is valid")
@@ -69,6 +82,32 @@ impl Signature {
         if let Some(url) = &self.creator.works_url {
             validate_url(url)?;
         }
+        ensure!(self.creator.apps.len() <= 32, "Too many creator apps");
+        let mut apps = HashSet::new();
+        for app in &self.creator.apps {
+            ensure!(
+                !app.id.is_empty()
+                    && app.id.len() <= 80
+                    && app
+                        .id
+                        .bytes()
+                        .all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_'),
+                "Invalid app ID"
+            );
+            ensure!(apps.insert(&app.id), "Duplicate app ID");
+            ensure!(
+                !app.name.trim().is_empty()
+                    && app.name.len() <= 120
+                    && app.description.len() <= 600,
+                "Invalid app description"
+            );
+            validate_url(&app.url)?;
+            validate_url(&app.icon)?;
+            ensure!(
+                app.url.len() <= 2048 && app.icon.len() <= 2048,
+                "App URL is too long"
+            );
+        }
         let mut ids = HashSet::from(["creator", "works"]);
         for link in &self.links {
             ensure!(
@@ -92,6 +131,15 @@ impl Signature {
     /// Resolve registered IDs only. The UI never passes arbitrary URLs to the OS.
     pub fn resolve(&self, id: &str) -> Result<&str> {
         self.validate()?;
+        if let Some(app_id) = id.strip_prefix("app:") {
+            return self
+                .creator
+                .apps
+                .iter()
+                .find(|app| app.id == app_id)
+                .map(|app| app.url.as_str())
+                .context("Unknown creator app");
+        }
         if id == "creator" {
             return Ok(&self.creator.url);
         }
@@ -133,6 +181,8 @@ mod tests {
             "https://example.com/"
         );
         assert!(signature.resolve("https://unregistered.example/").is_err());
+        assert_eq!(signature.resolve("app:tickreel").unwrap(), "https://tickreel.ycccompany.jp/");
+        assert!(signature.resolve("app:unknown").is_err());
     }
     #[test]
     fn rejects_unsafe_urls_and_ambiguous_ids() {

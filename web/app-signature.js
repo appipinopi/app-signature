@@ -22,6 +22,17 @@ export async function refreshCreator(signature, { fetch: request = globalThis.fe
 export function validateSignature(signature) {
   if (!signature?.appName?.trim() || !signature?.creator?.name?.trim()) throw new Error('アプリ名・開発者名が必要です。');
   const ids = new Set(['creator', 'works']);
+  const appIds = new Set();
+  if ((signature.creator.apps ?? []).length > 32) throw new Error('アプリは32件までです。');
+  for (const app of signature.creator.apps ?? []) {
+    if (!/^[A-Za-z0-9_-]+$/.test(app.id) || appIds.has(app.id) || !app.name?.trim() || typeof app.description !== 'string') throw new Error('アプリ一覧を確認してください。');
+    appIds.add(app.id);
+    for (const value of [app.url, app.icon]) {
+      if (typeof value !== 'string' || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('アプリのURLを確認してください。');
+      const url = new URL(value);
+      if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) throw new Error('アプリのURLにはHTTPSを使用してください。');
+    }
+  }
   for (const link of signature.links ?? []) {
     if (!/^[A-Za-z0-9_-]+$/.test(link.id) || ids.has(link.id) || !link.label?.trim()) throw new Error('リンク設定を確認してください。');
     ids.add(link.id);

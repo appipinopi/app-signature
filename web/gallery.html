@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>私が作ったもの</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#253b39;font-family:'Segoe UI','Yu Gothic UI',sans-serif}main{max-width:1000px;margin:auto;padding:42px 36px}header{margin-bottom:30px}.eyebrow{font-size:10px;letter-spacing:2px;color:#258477;font-weight:700}h1{font-size:30px;letter-spacing:-1px;margin:10px 0}header p{color:#73827f;font-size:13px;line-height:1.9;margin:0}.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}.app{appearance:none;text-align:left;font:inherit;background:white;color:inherit;border:1px solid #e0e7e4;border-radius:18px;padding:26px;cursor:pointer;min-height:216px;transition:transform .15s,border-color .15s,box-shadow .15s}.app:hover{transform:translateY(-3px);border-color:#68ab9c;box-shadow:0 10px 28px #1c554410}.app:focus-visible{outline:3px solid #258477;outline-offset:4px}.app:disabled{opacity:.65;cursor:wait}.icon{display:flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:20px;border-radius:16px;background:#edf5f1;font-size:26px;font-weight:700;color:#278575}.icon img{width:48px;height:48px;object-fit:contain}.app h2{font-size:17px;margin:0 0 8px;display:flex;justify-content:space-between;gap:10px}.arrow{color:#80a59a;font-weight:400}.app p{font-size:12px;line-height:1.85;color:#7c8885;margin:0}footer{margin-top:34px;padding-top:18px;border-top:1px solid #e0e7e4;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:11px;color:#85928e}#error{color:#a94c45;font-size:12px;margin-top:18px}#error:empty{display:none}.empty{padding:25px;color:#73827f;font-size:13px}button{touch-action:manipulation}@media(prefers-reduced-motion:reduce){.app{transition:none}}@media(max-width:500px){main{padding:28px 20px}h1{font-size:26px}.apps{grid-template-columns:1fr}}
+</style></head><body><main><header><div class="eyebrow">APPS BY APPIPINOPI</div><h1>私が作ったもの</h1><p>気になるアイコンから、アプリのサイトへ。</p></header><div class="apps" id="apps" aria-label="開発したアプリ"></div><p id="error" role="status"></p><footer><span id="creator">Made by appipinopi</span><span>アプリのサイトは外部ブラウザーで開きます ↗</span></footer></main>
+<script>
+(() => {
+  let next = 0, previous = ''; const pending = new Map();
+  window.__galleryReply = (id, result, error) => { const callback = pending.get(id); if(!callback)return; pending.delete(id); error ? callback.reject(new Error(error)) : callback.resolve(result); };
+  const invoke = (method, ...args) => new Promise((resolve,reject) => { const id = ++next; pending.set(id,{resolve,reject}); window.ipc.postMessage(JSON.stringify({id,method,args})); });
+  function paint(signature) {
+    const serialized = JSON.stringify(signature); if(serialized === previous)return; previous = serialized;
+    document.getElementById('creator').textContent = `Made by ${signature.creator.name}`;
+    const container = document.getElementById('apps'); container.replaceChildren();
+    for(const app of signature.creator.apps ?? []) {
+      const button = document.createElement('button'); button.className='app'; button.dataset.appId=app.id;button.type='button';button.setAttribute('aria-label',`${app.name}のサイトを開く`);
+      const icon = document.createElement('span');icon.className='icon';const img = document.createElement('img');img.alt='';img.src=app.icon;img.referrerPolicy='no-referrer';img.onerror=()=>{icon.textContent=app.name.slice(0,2);};icon.append(img);
+      const heading = document.createElement('h2');heading.textContent=app.name;const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent='↗';heading.append(arrow);
+      const description=document.createElement('p');description.textContent=app.description;
+      button.append(icon,heading,description);button.onclick=async()=>{button.disabled=true;document.getElementById('error').textContent='';try{await invoke('openApp',app.id);}catch{document.getElementById('error').textContent='サイトを開けませんでした。もう一度お試しください。';}finally{button.disabled=false;}};
+      container.append(button);
+    }
+    if(!container.children.length){const empty=document.createElement('p');empty.className='empty';empty.textContent='アプリ一覧は準備中です。';container.append(empty);}
+  }
+  async function refresh(){try{paint(await invoke('catalog'));}catch{document.getElementById('error').textContent='一覧を読み込めませんでした。';}}
+  window.galleryReady=refresh();setInterval(refresh,60000);
+  if(window.__galleryQa){window.galleryReady.then(async()=>{try{const tiles=[...document.querySelectorAll('[data-app-id]')];if(tiles.length<2)throw new Error('App tiles missing');const result=await invoke('openApp',tiles[0].dataset.appId);if(!result.url.startsWith('https://'))throw new Error('Invalid app target');let rejected=false;try{await invoke('openApp','unknown-app')}catch{rejected=true}if(!rejected)throw new Error('Unregistered app accepted');await invoke('qaReport',{success:true,apps:tiles.map(tile=>tile.dataset.appId),url:result.url});}catch(error){await invoke('qaReport',{success:false,error:String(error)});}});}
+})();
+</script></body></html>

@@ -1,5 +1,21 @@
 {
   "name": "appipinopi",
   "url": "https://github.com/appipinopi",
-  "worksUrl": "https://portal.88soundboard.workers.dev/"
+  "worksUrl": "https://portal.88soundboard.workers.dev/",
+  "apps": [
+    {
+      "id": "tickreel",
+      "name": "Tickreel",
+      "description": "一日の積み重ねを、一本のタイムラプスに。",
+      "url": "https://tickreel.ycccompany.jp/",
+      "icon": "https://tickreel.ycccompany.jp/favicon.svg"
+    },
+    {
+      "id": "88soundboard",
+      "name": "88SOUNDBOARD",
+      "description": "音を楽しむサウンドボード。",
+      "url": "https://portal.88soundboard.workers.dev/",
+      "icon": "https://portal.88soundboard.workers.dev/favicon.svg"
+    }
+  ]
 }

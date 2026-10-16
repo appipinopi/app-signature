@@ -17,6 +17,10 @@ appipinopiのアプリに共通で入れる、開発者の署名と公式リン�
 
 ## 「私が作ったもの」をアプリ更新なしで変更する
 
+対応するデスクトップアプリでは「私が作ったもの」から専用ウィンドウを開き、アプリアイコンを一覧表示します。アイコンを押すと該当アプリのサイトを外部ブラウザーで開きます。一覧は `creator.json` の `apps` を編集してください。配列の順番が表示順です。各項目は `id`（固定ID）、`name`、`description`、`url`（開くサイト）、`icon`（HTTPSの画像URL）を持ちます。削除したアプリは次回更新後に非表示になります。アイコンを読み込めない場合はアプリ名の先頭文字を表示します。
+
+共通の一覧画面は `web/gallery.html`（Rustでは `GALLERY_HTML`）です。ホストは `catalog` で現在のSignature、`openApp` で選択されたIDの `signature.open("app:<id>")` を扱います。渡されたURLを直接OSに渡さず、登録済みのIDから解決してください。
+
 [creator.jsonを編集](https://github.com/appipinopi/app-signature/edit/main/creator.json)し、`worksUrl` を変更してmainへコミットします。対応するアプリは起動時と1時間ごとに取得します。全OS・全配布版で共通です。オフラインや不正な設定の場合は前回の有効な設定、初回は同梱の設定を使います。
 
 Rustでは `LiveSignature::new(signature, cache_path)` を保持し、`snapshot()` で現在の設定を読みます。終了時に破棄すると取得スレッドも終了します。Webでは `refreshCreator(signature)` を呼び、戻り値を `mountSignature` に渡します。通常のWebで定期更新する場合は1時間ごとに再実行してください。
