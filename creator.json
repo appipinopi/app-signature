@@ -15,7 +15,14 @@
       "name": "88SOUNDBOARD",
       "description": "音を楽しむサウンドボード。",
       "url": "https://portal.88soundboard.workers.dev/",
-      "icon": "https://portal.88soundboard.workers.dev/favicon.svg"
+      "icon": "https://portal.88soundboard.workers.dev/favicon.ico"
+    },
+    {
+      "id": "animedb",
+      "name": "AnimeDB",
+      "description": "アニメの今を、ひとつに。人物・制作会社を探す。",
+      "url": "https://animedb.88soundboard.workers.dev/people",
+      "icon": "https://animedb.88soundboard.workers.dev/favicon.svg"
     }
   ]
 }
