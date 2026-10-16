@@ -1,0 +1,15 @@
+{
+  "name": "@appipinopi/app-signature",
+  "version": "0.1.0",
+  "description": "Shared Made by appipinopi signature and app links",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./web/app-signature.js",
+    "./style.css": "./web/app-signature.css",
+    "./creator.json": "./creator.json"
+  },
+  "files": ["web", "creator.json", "README.md", "LICENSE"],
+  "scripts": {"test": "node --test web/app-signature.test.js"},
+  "repository": {"type": "git", "url": "https://github.com/appipinopi/app-signature.git"}
+}
