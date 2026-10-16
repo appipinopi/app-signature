@@ -24,7 +24,14 @@ fn apply(signature: &Signature, json: &[u8]) -> Result<Signature> {
         json.len() as u64 <= LIMIT,
         "Creator configuration is too large"
     );
-    let creator: Creator = serde_json::from_slice(json)?;
+    let value: serde_json::Value = serde_json::from_slice(json)?;
+    let has_apps = value.get("apps").is_some();
+    let mut creator: Creator = serde_json::from_value(value)?;
+    // Older cached creator.json files predate the catalog. Keep the bundled
+    // catalog until a new configuration arrives; explicit [] still clears it.
+    if !has_apps {
+        creator.apps = signature.creator.apps.clone();
+    }
     ensure!(
         creator.name.len() <= 120
             && creator.url.len() <= 2048
