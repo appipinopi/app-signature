@@ -21,7 +21,7 @@ appipinopiのアプリに共通で入れる、開発者の署名と公式リン�
 
 ```toml
 [dependencies]
-app-signature = { git = "https://github.com/appipinopi/app-signature", tag = "v0.1.0" }
+app-signature = { git = "https://github.com/appipinopi/app-signature", tag = "v0.1.1" }
 ```
 
 アプリ内に次のJSONを保存します。開発者情報は共通の `creator.json` が初期値になります。
@@ -43,7 +43,7 @@ WebViewでは `WEB_SCRIPT` と `WEB_STYLE` をローカルのJS/CSSとして配�
 GitHubのソースから `web` の2ファイルをアプリへ同梱するか、npmのGit依存として追加します。npmレジストリへの公開は不要です。
 
 ```json
-{"dependencies":{"@appipinopi/app-signature":"github:appipinopi/app-signature#v0.1.0"}}
+{"dependencies":{"@appipinopi/app-signature":"github:appipinopi/app-signature#v0.1.1"}}
 ```
 
 ```html
@@ -54,7 +54,7 @@ GitHubのソースから `web` の2ファイルをアプリへ同梱するか、
   mountSignature(document.getElementById('creator-signature'), {
     signature: {
       appName: 'My App',
-      creator: { name: 'appipinopi', url: 'https://github.com/appipinopi' },
+      creator: { name: 'appipinopi', url: 'https://github.com/appipinopi', worksUrl: 'https://portal.88soundboard.workers.dev/' },
       links: [{ id: 'website', label: '公式サイト', url: 'https://example.com/' }]
     }
   });
