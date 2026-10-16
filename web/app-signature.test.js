@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateSignature } from './app-signature.js';
-const sample = { appName: 'Example', creator: { name: 'appipinopi', url: 'https://github.com/appipinopi' }, links: [{ id: 'website', label: '公式サイト', url: 'https://example.com/' }] };
+const sample = { appName: 'Example', creator: { name: 'appipinopi', url: 'https://github.com/appipinopi', worksUrl: 'https://portal.88soundboard.workers.dev/' }, links: [{ id: 'website', label: '公式サイト', url: 'https://example.com/' }] };
 test('accepts a reusable signature with optional app links', () => {
   assert.equal(validateSignature(sample), sample);
   assert.doesNotThrow(() => validateSignature({ ...sample, links: [] }));
@@ -12,4 +12,6 @@ test('rejects unsafe URLs and duplicate or reserved IDs', () => {
   }
   assert.throws(() => validateSignature({ ...sample, links: [...sample.links, ...sample.links] }));
   assert.throws(() => validateSignature({ ...sample, links: [{ ...sample.links[0], id: 'creator' }] }));
+  assert.throws(() => validateSignature({ ...sample, links: [{ ...sample.links[0], id: 'works' }] }));
+  assert.throws(() => validateSignature({ ...sample, creator: { ...sample.creator, worksUrl: 'javascript:alert(1)' } }));
 });

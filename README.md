@@ -4,6 +4,8 @@ appipinopiのアプリに共通で入れる、開発者の署名と公式リン�
 
 **Made by appipinopi ↗** をクリックすると開発者のGitHubへ、**公式サイト ↗** をクリックするとアプリのサイトへ移動します。専用のプロフィールページは不要です。
 
+**[私が作ったもの ↗](https://portal.88soundboard.workers.dev/)** から、制作したアプリのポータルを開けます。この共通リンクは `creator.json` の `worksUrl` で管理し、各アプリにも表示します。
+
 ## 構成
 
 - `creator.json`: 全アプリで使う開発者名とGitHub URL。

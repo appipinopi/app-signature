@@ -12,6 +12,8 @@ pub const CREATOR_JSON: &str = include_str!("../creator.json");
 pub struct Creator {
     pub name: String,
     pub url: String,
+    #[serde(default, rename = "worksUrl", skip_serializing_if = "Option::is_none")]
+    pub works_url: Option<String>,
 }
 fn default_creator() -> Creator {
     serde_json::from_str(CREATOR_JSON).expect("built-in creator manifest is valid")
@@ -62,7 +64,10 @@ impl Signature {
             "Creator name is required."
         );
         validate_url(&self.creator.url)?;
-        let mut ids = HashSet::from(["creator"]);
+        if let Some(url) = &self.creator.works_url {
+            validate_url(url)?;
+        }
+        let mut ids = HashSet::from(["creator", "works"]);
         for link in &self.links {
             ensure!(
                 !link.id.is_empty()
@@ -88,6 +93,13 @@ impl Signature {
         if id == "creator" {
             return Ok(&self.creator.url);
         }
+        if id == "works" {
+            return self
+                .creator
+                .works_url
+                .as_deref()
+                .context("Creator works URL is not configured");
+        }
         self.links
             .iter()
             .find(|link| link.id == id)
@@ -106,6 +118,10 @@ mod tests {
     fn default_creator_and_registered_links() {
         let signature = Signature::from_json(r#"{"appName":"Example","links":[{"id":"website","label":"公式サイト","url":"https://example.com/"}]}"#).unwrap();
         assert_eq!(signature.creator.name, "appipinopi");
+        assert_eq!(
+            signature.resolve("works").unwrap(),
+            "https://portal.88soundboard.workers.dev/"
+        );
         assert_eq!(
             signature.resolve("creator").unwrap(),
             "https://github.com/appipinopi"

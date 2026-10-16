@@ -1,12 +1,12 @@
 /** Dependency-free creator signature for browsers, Electron and native webviews. */
 export function validateSignature(signature) {
   if (!signature?.appName?.trim() || !signature?.creator?.name?.trim()) throw new Error('アプリ名・開発者名が必要です。');
-  const ids = new Set(['creator']);
+  const ids = new Set(['creator', 'works']);
   for (const link of signature.links ?? []) {
     if (!/^[A-Za-z0-9_-]+$/.test(link.id) || ids.has(link.id) || !link.label?.trim()) throw new Error('リンク設定を確認してください。');
     ids.add(link.id);
   }
-  for (const value of [signature.creator.url, ...(signature.links ?? []).map(link => link.url)]) {
+  for (const value of [signature.creator.url, ...(signature.creator.worksUrl === undefined ? [] : [signature.creator.worksUrl]), ...(signature.links ?? []).map(link => link.url)]) {
     if (typeof value !== 'string' || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('リンクURLを確認してください。');
     const url = new URL(value);
     if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) throw new Error('リンクには認証情報を含まないHTTPS URLを指定してください。');
@@ -50,11 +50,12 @@ export function mountSignature(container, { signature, onOpenLink, onError } = {
     return anchor;
   }
   root.append(link('creator', `Made by ${signature.creator.name} ↗`, signature.creator.url, 'app-signature__creator'));
-  if (signature.links?.length) {
+  const publicLinks = [...(signature.creator.worksUrl ? [{ id: 'works', label: '私が作ったもの', url: signature.creator.worksUrl }] : []), ...(signature.links ?? [])];
+  if (publicLinks.length) {
     const links = document.createElement('nav');
     links.className = 'app-signature__links';
     links.setAttribute('aria-label', '公式リンク');
-    for (const item of signature.links) links.append(link(item.id, `${item.label} ↗`, item.url, 'app-signature__link'));
+    for (const item of publicLinks) links.append(link(item.id, `${item.label} ↗`, item.url, 'app-signature__link'));
     root.append(links);
   }
   root.append(message);
