@@ -1,4 +1,24 @@
 /** Dependency-free creator signature for browsers, Electron and native webviews. */
+export async function refreshCreator(signature, { fetch: request = globalThis.fetch } = {}) {
+  validateSignature(signature);
+  try {
+    const response = await request('https://raw.githubusercontent.com/appipinopi/app-signature/main/creator.json', { cache: 'no-cache', redirect: 'error', signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return signature;
+    // Stream and bound the response before parsing untrusted configuration.
+    const reader = response.body.getReader();
+    const chunks = []; let size = 0;
+    while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      size += value.byteLength;
+      if (size > 16384) { await reader.cancel(); return signature; }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(size); let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+    const updated = { ...signature, creator: JSON.parse(new TextDecoder().decode(bytes)) };
+    return validateSignature(updated);
+  } catch { return signature; }
+}
 export function validateSignature(signature) {
   if (!signature?.appName?.trim() || !signature?.creator?.name?.trim()) throw new Error('アプリ名・開発者名が必要です。');
   const ids = new Set(['creator', 'works']);

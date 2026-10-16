@@ -13,7 +13,13 @@ appipinopiのアプリに共通で入れる、開発者の署名と公式リン�
 - Rust crate `app-signature`: 設定の読み込み、リンクIDの解決、OSの既定ブラウザーで開く処理。Windows / macOS / Linuxに対応します。
 - `examples/tickreel.json`: アプリごとに差し替える設定例。
 
-表示のためのサーバー接続・解析・端末ID・自動更新はありません。部品と設定はアプリへ同梱します。外部ページを開くのはユーザーがリンクを押した時だけです。
+リンク設定だけをGitHubから更新できます。解析・端末IDの送信は行いません。部品はアプリに同梱し、実行ファイルやスクリプトは更新しません。外部ページを開くのはユーザーがリンクを押した時だけです。
+
+## 「私が作ったもの」をアプリ更新なしで変更する
+
+[creator.jsonを編集](https://github.com/appipinopi/app-signature/edit/main/creator.json)し、`worksUrl` を変更してmainへコミットします。対応するアプリは起動時と1時間ごとに取得します。全OS・全配布版で共通です。オフラインや不正な設定の場合は前回の有効な設定、初回は同梱の設定を使います。
+
+Rustでは `LiveSignature::new(signature, cache_path)` を保持し、`snapshot()` で現在の設定を読みます。終了時に破棄すると取得スレッドも終了します。Webでは `refreshCreator(signature)` を呼び、戻り値を `mountSignature` に渡します。通常のWebで定期更新する場合は1時間ごとに再実行してください。
 
 ## Rustアプリへ組み込む
 
@@ -21,7 +27,7 @@ appipinopiのアプリに共通で入れる、開発者の署名と公式リン�
 
 ```toml
 [dependencies]
-app-signature = { git = "https://github.com/appipinopi/app-signature", tag = "v0.1.1" }
+app-signature = { git = "https://github.com/appipinopi/app-signature", tag = "v0.2.0" }
 ```
 
 アプリ内に次のJSONを保存します。開発者情報は共通の `creator.json` が初期値になります。
@@ -43,7 +49,7 @@ WebViewでは `WEB_SCRIPT` と `WEB_STYLE` をローカルのJS/CSSとして配�
 GitHubのソースから `web` の2ファイルをアプリへ同梱するか、npmのGit依存として追加します。npmレジストリへの公開は不要です。
 
 ```json
-{"dependencies":{"@appipinopi/app-signature":"github:appipinopi/app-signature#v0.1.1"}}
+{"dependencies":{"@appipinopi/app-signature":"github:appipinopi/app-signature#v0.2.0"}}
 ```
 
 ```html
@@ -67,7 +73,7 @@ GitHubのソースから `web` の2ファイルをアプリへ同梱するか、
 
 ## 更新
 
-開発者名・GitHubは共通の `creator.json`、各アプリのサイトは各アプリ内のJSONで変更します。共通部品の新版をタグ付けし、各アプリで依存バージョンを上げて配布します。表示を遠隔操作する仕組みはありません。
+開発者名・GitHub・作品ポータルは共通の `creator.json`、各アプリの公式サイトは各アプリ内のJSONで変更します。LiveSignature対応アプリでは、開発者のリンク変更だけならアプリの再配布は不要です。共通部品そのものの変更は各アプリの依存バージョンを上げて配布します。
 
 ## 検証
 

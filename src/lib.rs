@@ -2,6 +2,8 @@
 use anyhow::{Context, Result, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+mod live;
+pub use live::LiveSignature;
 
 pub const WEB_SCRIPT: &str = include_str!("../web/app-signature.js");
 pub const WEB_STYLE: &str = include_str!("../web/app-signature.css");
